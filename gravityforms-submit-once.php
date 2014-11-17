@@ -8,14 +8,15 @@
  */
 
 /**
- * Plugin Name: Gravity Forms Submit Once
- * Description: Limit Gravity Form forms to accept only one entry per user.
- * Plugin URI:  https://github.com/lmoffereins/gravityforms-submit-once/
- * Version:     1.0.0
- * Author:      Laurens Offereins
- * Author URI:  https://github.com/lmoffereins/
- * Text Domain: gravityforms-submit-once
- * Domain Path: /languages/
+ * Plugin Name:       Gravity Forms Submit Once
+ * Description:       Limit Gravity Form forms to accept only one entry per user.
+ * Plugin URI:        https://github.com/lmoffereins/gravityforms-submit-once/
+ * Version:           1.0.0
+ * Author:            Laurens Offereins
+ * Author URI:        https://github.com/lmoffereins/
+ * Text Domain:       gravityforms-submit-once
+ * Domain Path:       /languages/
+ * GitHub Plugin URI: lmoffereins/gravityforms-submit-once
  */
 
 // Exit if accessed directly
