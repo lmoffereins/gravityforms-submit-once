@@ -75,7 +75,7 @@ final class GravityForms_Submit_Once {
 	private function setup_actions() {
 
 		// Displaying form
-		add_filter( '', array( $this, 'bail_submitted_form' ), 10, 2 );
+		add_filter( '', array( $this, 'handle_form_display' ), 10, 2 );
 
 		// Admin settings
 		add_filter( '', array( $this, 'register_form_meta'   ) );
@@ -92,11 +92,11 @@ final class GravityForms_Submit_Once {
 	 * @uses get_current_user_id()
 	 * @uses apply_filters() Calls 'gf_submit_once_bail_form'
 	 * 
-	 * @param bool $display Whether to display the form
+	 * @param bool $output The form output HTML
 	 * @param int $form_id The form ID
 	 * @return bool Whether to continue displaying the form
 	 */
-	public function bail_submitted_form( $display = true, $form_id = 0 ) {
+	public function handle_form_display( $output = true, $form_id = 0 ) {
 
 		// Get the current user
 		$user_id = get_current_user_id();
@@ -104,11 +104,17 @@ final class GravityForms_Submit_Once {
 		// Form is marked to allow submissions once
 		if ( gform_get_form_meta( $form_id, $this->meta_key ) ) {
 
-			// Get whether user has submitted to this form yet
-			$display = ! (bool) gform_get_user_form_entries( $form_id, $user_id );
+			// User is not logged in. Hide the form.
+			if ( empty( $user_id ) ) {
+				$output = ''; // Default text to required login?
+
+			// User has already submitted this form. Hide the form.
+			} elseif ( gform_get_user_form_entries( $form_id, $user_id ) ) {
+				$output = __( 'Sorry, you can only submit this form once.', 'gravityforms-submit-once' );
+			}
 		}
 
-		return apply_filters( 'gf_submit_once_bail_form', $display, $form_id, $user_id );
+		return apply_filters( 'gf_submit_once_bail_form', $output, $form_id, $user_id );
 	}
 
 	/** Admin Settings **************************************************/
@@ -127,7 +133,7 @@ final class GravityForms_Submit_Once {
 	public function register_form_meta( $form_meta = array() ) {
 
 		// Append our meta field
-		$form_meta[ $this->meta_key ] = __( 'Limit form entries', 'gravityforms-submit-once' );
+		$form_meta[ $this->meta_key ] = __( 'Limit entries', 'gravityforms-submit-once' );
 
 		return $form_meta;
 	}
