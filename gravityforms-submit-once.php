@@ -9,7 +9,7 @@
 
 /**
  * Plugin Name:       Gravity Forms Submit Once
- * Description:       Limit Gravity Form forms to accept only one entry per user.
+ * Description:       Limit forms in Gravity Forms to accept only one entry per user.
  * Plugin URI:        https://github.com/lmoffereins/gravityforms-submit-once/
  * Version:           1.0.0
  * Author:            Laurens Offereins
@@ -31,12 +31,12 @@ if ( ! class_exists( 'GravityForms_Submit_Once' ) ) :
 final class GravityForms_Submit_Once {
 
 	/**
-	 * The plugin meta field key
+	 * The plugin setting's meta key
 	 *
 	 * @since 1.0.0
 	 * @var string
 	 */
-	private $meta_key = 'gform-submit-once';
+	private $meta_key = 'submitOnce';
 
 	/**
 	 * Setup and return the singleton pattern
@@ -74,12 +74,12 @@ final class GravityForms_Submit_Once {
 	 */
 	private function setup_actions() {
 
-		// Displaying form
-		add_filter( '', array( $this, 'handle_form_display' ), 10, 2 );
+		// Displaying the form
+		add_filter( 'gform_get_form_filter', array( $this, 'handle_form_display' ), 90, 2 );
 
-		// Admin settings
-		add_filter( '', array( $this, 'register_form_meta'   ) );
-		add_action( '', array( $this, 'display_form_setting' ) );
+		// Form settings
+		add_filter( 'gform_form_settings',          array( $this, 'register_form_setting' ), 10, 2 );
+		add_filter( 'gform_pre_form_settings_save', array( $this, 'update_form_setting'   )        );
 	}
 
 	/** Public methods **************************************************/
@@ -90,69 +90,161 @@ final class GravityForms_Submit_Once {
 	 * @since 1.0.0
 	 *
 	 * @uses get_current_user_id()
-	 * @uses apply_filters() Calls 'gf_submit_once_bail_form'
+	 * @uses apply_filters() Calls 'gf_submit_once_handle_form_display'
 	 * 
-	 * @param bool $output The form output HTML
-	 * @param int $form_id The form ID
-	 * @return bool Whether to continue displaying the form
+	 * @param string $form_string The form response HTML
+	 * @param array $form Form meta data
+	 * @return string Form meta data or null when not to display
 	 */
-	public function handle_form_display( $output = true, $form_id = 0 ) {
+	public function handle_form_display( $form_string, $form ) {
 
 		// Get the current user
 		$user_id = get_current_user_id();
 
 		// Form is marked to allow submissions once
-		if ( gform_get_form_meta( $form_id, $this->meta_key ) ) {
+		if ( ! empty( $form ) && $this->get_form_setting( $form, $this->meta_key ) ) {
 
-			// User is not logged in. Hide the form.
+			// User is not logged in
 			if ( empty( $user_id ) ) {
-				$output = ''; // Default text to required login?
 
-			// User has already submitted this form. Hide the form.
-			} elseif ( gform_get_user_form_entries( $form_id, $user_id ) ) {
-				$output = __( 'Sorry, you can only submit this form once.', 'gravityforms-submit-once' );
+				// Hide the form when login is not explicitly required
+				if ( ! isset( $form['requireLogin'] ) || ! $form['requireLogin'] ) {
+
+					// Display not-loggedin message
+					$form_string = '<p>' . ( empty( $form['requireLoginMessage']) ? $this->get_gf_translation( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
+				}
+
+			// User has already submitted this form. Hide the form
+			} elseif ( (bool) $this->get_user_form_entries( $form['id'], $user_id ) ) {
+				$form_string = '<p>' . __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) . '</p>';
 			}
 		}
 
-		return apply_filters( 'gf_submit_once_bail_form', $output, $form_id, $user_id );
+		return $form_string;
+	}
+
+	/**
+	 * Return the given form's meta value
+	 *
+	 * @since 1.0.0
+	 * 
+	 * @param int|array $form_id Form ID or form object
+	 * @param string $meta_key Form meta key
+	 * @return mixed Form setting's value or NULL when not found
+	 */
+	public function get_form_setting( $form_id, $meta_key ) {
+
+		// Get form metadata
+		if ( ! is_array( $form_id ) && is_numeric( $form_id ) ) {
+			$form = RGFormsModel::get_form_meta( (int) $form_id );
+		} elseif ( is_array( $form_id ) ) {
+			$form = $form_id;
+		} else {
+			return null;
+		}
+
+		// Get form setting
+		return isset( $form[ $meta_key ] ) ? $form[ $meta_key ] : null;
+	}
+
+	/**
+	 * Return the given form's entries ids for the given user
+	 *
+	 * @since 1.0.0
+	 * 
+	 * @param int $form_id Form ID
+	 * @param int $user_id Optional. User ID. Defaults to current user ID
+	 * @return array The user's form entries ids
+	 */
+	public function get_user_form_entries( $form_id, $user_id = 0 ) {
+		global $wpdb;
+
+		// Default to current user
+		if ( empty( $user_id ) ) {
+			$user_id = get_current_user_id();
+		}
+
+		// Since GF hasn't any such query function, we'll have to write
+		// our own SQL query to get the user's form entries.
+		$table_name = RGFormsModel::get_lead_table_name();
+		$entries = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $table_name WHERE form_id = %d AND created_by = %d AND status = %s", $form_id, $user_id, 'active' ) );
+
+		return apply_filters( 'gf_submit_once_get_user_form_entries', $entries, $form_id, $user_id );
+	}
+
+	/**
+	 * Return a translated string with the 'gravityforms' context
+	 *
+	 * @since 1.0.0
+	 *
+	 * @uses call_user_func_array() To call __() indirectly
+	 * @param string $string String to be translated
+	 * @return string Translation
+	 */
+	public function get_gf_translation( $string ) {
+		return call_user_func_array( '__', array( $string, 'gravityforms' ) );
 	}
 
 	/** Admin Settings **************************************************/
 
 	/**
-	 * Register plugin form meta field
-	 *
-	 * GF also updates our meta field by this registration. So the meta field key
-	 * should correspond with the name attribute of the settings input field.
+	 * Display the plugin form setting's field
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $form_meta Form meta fields
-	 * @return array Form meta fields
+	 * @param array $settings Form settings sections and their fields
+	 * @param int $form Form object
 	 */
-	public function register_form_meta( $form_meta = array() ) {
+	public function register_form_setting( $settings, $form ) {
 
-		// Append our meta field
-		$form_meta[ $this->meta_key ] = __( 'Limit entries', 'gravityforms-submit-once' );
+		// Start output buffer and setup our setting's field
+		ob_start(); ?>
 
-		return $form_meta;
+		<tr>
+			<th><?php _e( 'Submit once', 'gravityforms-submit-once' ); ?></th>
+			<td>
+				<input type="checkbox" name="submit-once" id="gform_submit_once" value="1" <?php checked( $this->get_form_setting( $form, $this->meta_key ) ); ?>>
+				<label for="gform_submit_once"><?php _e( 'Limit this form to accept only one entry per user', 'gravityforms-submit-once' ); ?></label>
+			</td>
+		</tr>
+
+		<?php
+
+		// Store and end the output buffer in a variable
+		$field = ob_get_clean();
+
+		// Settings sections are stored by their translatable title
+		$section = $this->get_gf_translation( 'Restrictions' );
+
+		// Define field key to insert ours after
+		$position = array_search( 'entry_limit_message', array_keys( $settings[ $section ] ) ) + 1;
+
+		/**
+		 * Insert our field at the given position
+		 * 
+		 * @link http://stackoverflow.com/questions/3353745/how-to-insert-element-into-array-to-specific-position/3354804#3354804
+		 */
+		$settings[ $section ] = array_slice( $settings[ $section ], 0, $position, true ) +
+			array( $this->meta_key => $field ) +
+			array_slice( $settings[ $section ], $position, -1, true );
+
+		return $settings;
 	}
 
 	/**
-	 * Display the plugin form setting
+	 * Run the update form setting logic
 	 *
 	 * @since 1.0.0
-	 *
-	 * @param int $form_id Form ID
+	 * 
+	 * @param array $settings Form settings
+	 * @return array Form settings
 	 */
-	public function display_form_setting( $form_id ) { ?>
+	public function update_form_setting( $settings ) {
 
-		<label>
-			<input type="checkbox" name="submit-once" value="1" <?php checked( gform_get_form_meta( $form_id, $this->meta_key ) ); ?>>
-			<span class="description"><?php _e( 'Limit this form to accept only one entry per user.', 'gravityforms-submit-once' ); ?></span>
-		</label>
+		// Sanitize form from $_POST var
+		$settings[ $this->meta_key ] = isset( $_POST['submit-once'] ) ? (int) $_POST['submit-once'] : 0;
 
-		<?php
+		return $settings;
 	}
 }
 
@@ -164,10 +256,15 @@ final class GravityForms_Submit_Once {
  * @return GravityForms_Submit_Once
  */
 function gravityforms_submit_once() {
+
+	// Bail if GF is not active
+	if ( ! class_exists( 'GFForms' ) )
+		return;
+
 	return GravityForms_Submit_Once::instance();
 }
 
-// Initiation depends on GF
-add_action( 'gform_init', 'gravityforms_submit_once' );
+// Initiate on plugins_loaded
+add_action( 'plugins_loaded', 'gravityforms_submit_once' );
 
 endif; // class_exists

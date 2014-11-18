@@ -7,11 +7,11 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Limit Gravity Form forms to accept only one entry per user.
+Limit forms in Gravity Forms to accept only one entry per user.
 
 == Description ==
 
-This plugin introduces a Gravity Forms form setting to mark it to accept only one entry per user.
+This plugin introduces a form setting in Gravity Forms to mark a form to accept only one entry per user.
 
 == Changelog ==
 
