@@ -128,18 +128,16 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @since 1.0.0
 	 * 
-	 * @param int|array $form_id Form ID or form object
+	 * @param array|int $form Form object or form ID
 	 * @param string $meta_key Form meta key
 	 * @return mixed Form setting's value or NULL when not found
 	 */
-	public function get_form_setting( $form_id, $meta_key ) {
+	public function get_form_setting( $form, $meta_key ) {
 
 		// Get form metadata
-		if ( ! is_array( $form_id ) && is_numeric( $form_id ) ) {
-			$form = RGFormsModel::get_form_meta( (int) $form_id );
-		} elseif ( is_array( $form_id ) ) {
-			$form = $form_id;
-		} else {
+		if ( ! is_array( $form ) && is_numeric( $form ) ) {
+			$form = RGFormsModel::get_form_meta( (int) $form );
+		} elseif ( ! is_array( $form ) ) {
 			return null;
 		}
 
