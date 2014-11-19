@@ -111,7 +111,7 @@ final class GravityForms_Submit_Once {
 				if ( ! isset( $form['requireLogin'] ) || ! $form['requireLogin'] ) {
 
 					// Display not-loggedin message
-					$form_string = '<p>' . ( empty( $form['requireLoginMessage']) ? $this->get_gf_translation( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
+					$form_string = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->get_gf_translation( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
 				}
 
 			// User has already submitted this form. Hide the form
@@ -226,7 +226,7 @@ final class GravityForms_Submit_Once {
 		 */
 		$settings[ $section ] = array_slice( $settings[ $section ], 0, $position, true ) +
 			array( $this->meta_key => $field ) +
-			array_slice( $settings[ $section ], $position, -1, true );
+			array_slice( $settings[ $section ], $position, null, true );
 
 		return $settings;
 	}
