@@ -90,13 +90,16 @@ final class GravityForms_Submit_Once {
 	 * @since 1.0.0
 	 *
 	 * @uses get_current_user_id()
-	 * @uses apply_filters() Calls 'gf_submit_once_handle_form_display'
+	 * @uses GravityForms_Submit_Once::get_form_setting()
+	 * @uses GravityForms_Submit_Once::get_gf_translation()
+	 * @uses GFCommon::gform_do_shortcode()
+	 * @uses GravityForms_Submit_Once::get_user_form_entries()
 	 * 
-	 * @param string $form_string The form response HTML
+	 * @param string $content The form response HTML
 	 * @param array $form Form meta data
-	 * @return string Form meta data or null when not to display
+	 * @return string Form HTML
 	 */
-	public function handle_form_display( $form_string, $form ) {
+	public function handle_form_display( $content, $form ) {
 
 		// Get the current user
 		$user_id = get_current_user_id();
@@ -111,22 +114,24 @@ final class GravityForms_Submit_Once {
 				if ( ! isset( $form['requireLogin'] ) || ! $form['requireLogin'] ) {
 
 					// Display not-loggedin message
-					$form_string = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->get_gf_translation( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
+					$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->get_gf_translation( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
 				}
 
 			// User has already submitted this form. Hide the form
 			} elseif ( (bool) $this->get_user_form_entries( $form['id'], $user_id ) ) {
-				$form_string = '<p>' . __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) . '</p>';
+				$content = '<p>' . __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) . '</p>';
 			}
 		}
 
-		return $form_string;
+		return $content;
 	}
 
 	/**
 	 * Return the given form's meta value
 	 *
 	 * @since 1.0.0
+	 *
+	 * @uses GFFormsModel::get_form_meta()
 	 * 
 	 * @param array|int $form Form object or form ID
 	 * @param string $meta_key Form meta key
@@ -136,7 +141,7 @@ final class GravityForms_Submit_Once {
 
 		// Get form metadata
 		if ( ! is_array( $form ) && is_numeric( $form ) ) {
-			$form = RGFormsModel::get_form_meta( (int) $form );
+			$form = GFFormsModel::get_form_meta( (int) $form );
 		} elseif ( ! is_array( $form ) ) {
 			return null;
 		}
@@ -149,6 +154,13 @@ final class GravityForms_Submit_Once {
 	 * Return the given form's entries ids for the given user
 	 *
 	 * @since 1.0.0
+	 * 
+	 * @global wpdb
+	 *
+	 * @uses get_current_user_id()
+	 * @uses GFFormsModel::get_lead_table_name()
+	 * @uses wpdb::get_col()
+	 * @uses wpdb::prepare()
 	 * 
 	 * @param int $form_id Form ID
 	 * @param int $user_id Optional. User ID. Defaults to current user ID
@@ -164,7 +176,7 @@ final class GravityForms_Submit_Once {
 
 		// Since GF hasn't any such query function, we'll have to write
 		// our own SQL query to get the user's form entries.
-		$table_name = RGFormsModel::get_lead_table_name();
+		$table_name = GFFormsModel::get_lead_table_name();
 		$entries = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $table_name WHERE form_id = %d AND created_by = %d AND status = %s", $form_id, $user_id, 'active' ) );
 
 		return apply_filters( 'gf_submit_once_get_user_form_entries', $entries, $form_id, $user_id );
@@ -190,6 +202,9 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @uses GravityForms_Submit_Once::get_form_setting()
+	 * @uses GravityForms_Submit_Once::get_gf_translation()
+	 * 
 	 * @param array $settings Form settings sections and their fields
 	 * @param int $form Form object
 	 */
