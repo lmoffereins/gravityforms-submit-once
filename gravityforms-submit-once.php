@@ -80,6 +80,9 @@ final class GravityForms_Submit_Once {
 		// Form settings
 		add_filter( 'gform_form_settings',          array( $this, 'register_form_setting' ), 10, 2 );
 		add_filter( 'gform_pre_form_settings_save', array( $this, 'update_form_setting'   )        );
+
+		// Tooltips
+		add_filter( 'gform_tooltips', array( $this, 'tooltips' ) );
 	}
 
 	/** Public methods **************************************************/
@@ -214,10 +217,10 @@ final class GravityForms_Submit_Once {
 		ob_start(); ?>
 
 		<tr>
-			<th><?php _e( 'Submit once', 'gravityforms-submit-once' ); ?></th>
+			<th><?php _e( 'Submit once', 'gravityforms-submit-once' ); ?> <?php gform_tooltip( 'submit_once' ); ?></th>
 			<td>
 				<input type="checkbox" name="submit-once" id="gform_submit_once" value="1" <?php checked( $this->get_form_meta( $form, $this->meta_key ) ); ?>>
-				<label for="gform_submit_once"><?php _e( 'Limit this form to accept only one entry per user', 'gravityforms-submit-once' ); ?></label>
+				<label for="gform_submit_once"><?php _e( 'Accept only one entry per user', 'gravityforms-submit-once' ); ?></label>
 			</td>
 		</tr>
 
@@ -258,6 +261,26 @@ final class GravityForms_Submit_Once {
 		$settings[ $this->meta_key ] = isset( $_POST['submit-once'] ) ? (int) $_POST['submit-once'] : 0;
 
 		return $settings;
+	}
+
+	/** Tooltips ***********************************************************/
+
+	/**
+	 * Append our custom tooltips to GF's tooltip collection
+	 *
+	 * @since 1.1.0
+	 *
+	 * @link gravityforms/tooltips.php
+	 * 
+	 * @param array $tips Tooltips
+	 * @return array Tooltips
+	 */
+	public function tooltips( $tips ) {
+
+		// Append our tooltip. Each tooltip consists of an <h6> header with a short description after it
+		$tips['submit_once'] = sprintf( '<h6>%s</h6>%s', __( 'Submit Once', 'vgsr' ), __( 'Check this option to limit the amount of entries users can submit to this form, to one. Requires users to be logged in.', 'gravityforms-submit-once' ) );
+
+		return $tips;
 	}
 }
 
