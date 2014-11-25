@@ -94,7 +94,7 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @uses get_current_user_id()
 	 * @uses GravityForms_Submit_Once::get_form_meta()
-	 * @uses GravityForms_Submit_Once::get_gf_translation()
+	 * @uses GravityForms_Submit_Once::translate()
 	 * @uses GFCommon::gform_do_shortcode()
 	 * @uses GravityForms_Submit_Once::get_user_form_entries()
 	 * 
@@ -117,7 +117,7 @@ final class GravityForms_Submit_Once {
 				if ( ! isset( $form['requireLogin'] ) || ! $form['requireLogin'] ) {
 
 					// Display not-loggedin message
-					$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->get_gf_translation( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
+					$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->translate( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
 				}
 
 			// User has already submitted this form. Hide the form
@@ -192,10 +192,11 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @uses call_user_func_array() To call __() indirectly
 	 * @param string $string String to be translated
+	 * @param string $context Optional. Translation context. Defaults to `gravityforms`
 	 * @return string Translation
 	 */
-	public function get_gf_translation( $string ) {
-		return call_user_func_array( '__', array( $string, 'gravityforms' ) );
+	public function translate( $string, $context = 'gravityforms' ) {
+		return call_user_func_array( '__', array( $string, $context ) );
 	}
 
 	/** Admin Settings **************************************************/
@@ -206,7 +207,7 @@ final class GravityForms_Submit_Once {
 	 * @since 1.0.0
 	 *
 	 * @uses GravityForms_Submit_Once::get_form_meta()
-	 * @uses GravityForms_Submit_Once::get_gf_translation()
+	 * @uses GravityForms_Submit_Once::translate()
 	 * 
 	 * @param array $settings Form settings sections and their fields
 	 * @param int $form Form object
@@ -230,7 +231,7 @@ final class GravityForms_Submit_Once {
 		$field = ob_get_clean();
 
 		// Settings sections are stored by their translatable title
-		$section = $this->get_gf_translation( 'Restrictions' );
+		$section = $this->translate( 'Restrictions' );
 
 		// Define field key to insert ours after
 		$position = array_search( 'entry_limit_message', array_keys( $settings[ $section ] ) ) + 1;
