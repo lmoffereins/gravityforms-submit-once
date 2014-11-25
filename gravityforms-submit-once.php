@@ -90,7 +90,7 @@ final class GravityForms_Submit_Once {
 	 * @since 1.0.0
 	 *
 	 * @uses get_current_user_id()
-	 * @uses GravityForms_Submit_Once::get_form_setting()
+	 * @uses GravityForms_Submit_Once::get_form_meta()
 	 * @uses GravityForms_Submit_Once::get_gf_translation()
 	 * @uses GFCommon::gform_do_shortcode()
 	 * @uses GravityForms_Submit_Once::get_user_form_entries()
@@ -105,7 +105,7 @@ final class GravityForms_Submit_Once {
 		$user_id = get_current_user_id();
 
 		// Form is marked to allow submissions once
-		if ( ! empty( $form ) && $this->get_form_setting( $form, $this->meta_key ) ) {
+		if ( ! empty( $form ) && $this->get_form_meta( $form, $this->meta_key ) ) {
 
 			// User is not logged in
 			if ( empty( $user_id ) ) {
@@ -137,7 +137,7 @@ final class GravityForms_Submit_Once {
 	 * @param string $meta_key Form meta key
 	 * @return mixed Form setting's value or NULL when not found
 	 */
-	public function get_form_setting( $form, $meta_key ) {
+	public function get_form_meta( $form, $meta_key ) {
 
 		// Get form metadata
 		if ( ! is_array( $form ) && is_numeric( $form ) ) {
@@ -202,7 +202,7 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @uses GravityForms_Submit_Once::get_form_setting()
+	 * @uses GravityForms_Submit_Once::get_form_meta()
 	 * @uses GravityForms_Submit_Once::get_gf_translation()
 	 * 
 	 * @param array $settings Form settings sections and their fields
@@ -216,7 +216,7 @@ final class GravityForms_Submit_Once {
 		<tr>
 			<th><?php _e( 'Submit once', 'gravityforms-submit-once' ); ?></th>
 			<td>
-				<input type="checkbox" name="submit-once" id="gform_submit_once" value="1" <?php checked( $this->get_form_setting( $form, $this->meta_key ) ); ?>>
+				<input type="checkbox" name="submit-once" id="gform_submit_once" value="1" <?php checked( $this->get_form_meta( $form, $this->meta_key ) ); ?>>
 				<label for="gform_submit_once"><?php _e( 'Limit this form to accept only one entry per user', 'gravityforms-submit-once' ); ?></label>
 			</td>
 		</tr>
