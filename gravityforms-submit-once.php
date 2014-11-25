@@ -140,7 +140,7 @@ final class GravityForms_Submit_Once {
 	public function get_form_meta( $form, $meta_key ) {
 
 		// Get form metadata
-		if ( ! is_array( $form ) && is_numeric( $form ) ) {
+		if ( is_numeric( $form ) ) {
 			$form = GFFormsModel::get_form_meta( (int) $form );
 		} elseif ( ! is_array( $form ) ) {
 			return null;
