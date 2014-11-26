@@ -282,7 +282,7 @@ final class GravityForms_Submit_Once {
 	public function tooltips( $tips ) {
 
 		// Append our tooltip. Each tooltip consists of an <h6> header with a short description after it
-		$tips['submit_once'] = sprintf( '<h6>%s</h6>%s', __( 'Submit Once', 'gravityforms-submit-once' ), __( 'Check this option to limit the amount of entries users can submit to this form, to one. Requires users to be logged in.', 'gravityforms-submit-once' ) );
+		$tips['submit_once'] = sprintf( '<h6>%s</h6>%s', __( 'Submit Once', 'gravityforms-submit-once' ), __( 'Check this option to limit the number of times a user can submit this form, to one. Requires a user to be logged in to view this form.', 'gravityforms-submit-once' ) );
 
 		return $tips;
 	}
