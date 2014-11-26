@@ -75,7 +75,7 @@ final class GravityForms_Submit_Once {
 	private function setup_actions() {
 
 		// Displaying the form
-		add_filter( 'gform_get_form_filter', array( $this, 'handle_form_display' ), 90, 2 );
+		add_filter( 'gform_get_form_filter', array( $this, 'handle_form_display' ), 50, 2 );
 
 		// Form settings
 		add_filter( 'gform_form_settings',          array( $this, 'register_form_setting' ), 10, 2 );
@@ -104,23 +104,23 @@ final class GravityForms_Submit_Once {
 	 */
 	public function handle_form_display( $content, $form ) {
 
+		// Bail when form or content is empty
+		if ( empty( $content ) || empty( $form ) )
+			return $content;
+
 		// Get the current user
 		$user_id = get_current_user_id();
 
 		// Form is marked to allow submissions once
-		if ( ! empty( $form ) && $this->get_form_meta( $form, $this->meta_key ) ) {
+		if ( (bool) $this->get_form_meta( $form, $this->meta_key ) ) {
 
-			// User is not logged in
-			if ( empty( $user_id ) ) {
+			// User is not logged in. Hide the form when login is not explicitly required
+			if ( empty( $user_id ) && empty( $form['requireLogin'] ) ) {
 
-				// Hide the form when login is not explicitly required
-				if ( ! isset( $form['requireLogin'] ) || ! $form['requireLogin'] ) {
+				// Display not-loggedin message
+				$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->translate( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
 
-					// Display not-loggedin message
-					$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->translate( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
-				}
-
-			// User has already submitted this form. Hide the form
+			// User has already submitted this form. Display only-submit-once message
 			} elseif ( (bool) $this->get_user_form_entries( $form['id'], $user_id ) ) {
 				$content = '<p>' . __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) . '</p>';
 			}
@@ -175,6 +175,9 @@ final class GravityForms_Submit_Once {
 		// Default to current user
 		if ( empty( $user_id ) ) {
 			$user_id = get_current_user_id();
+			if ( empty( $user_id ) ) {
+				return array();
+			}
 		}
 
 		// Since GF hasn't any such query function, we'll have to write
@@ -279,7 +282,7 @@ final class GravityForms_Submit_Once {
 	public function tooltips( $tips ) {
 
 		// Append our tooltip. Each tooltip consists of an <h6> header with a short description after it
-		$tips['submit_once'] = sprintf( '<h6>%s</h6>%s', __( 'Submit Once', 'vgsr' ), __( 'Check this option to limit the amount of entries users can submit to this form, to one. Requires users to be logged in.', 'gravityforms-submit-once' ) );
+		$tips['submit_once'] = sprintf( '<h6>%s</h6>%s', __( 'Submit Once', 'gravityforms-submit-once' ), __( 'Check this option to limit the amount of entries users can submit to this form, to one. Requires users to be logged in.', 'gravityforms-submit-once' ) );
 
 		return $tips;
 	}
