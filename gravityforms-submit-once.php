@@ -74,6 +74,9 @@ final class GravityForms_Submit_Once {
 	 */
 	private function setup_actions() {
 
+		// Translation
+		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ), 11 );
+
 		// Displaying the form
 		add_filter( 'gform_get_form_filter', array( $this, 'handle_form_display' ), 50, 2 );
 
@@ -83,6 +86,34 @@ final class GravityForms_Submit_Once {
 
 		// Tooltips
 		add_filter( 'gform_tooltips', array( $this, 'tooltips' ) );
+	}
+
+	/** Plugin **********************************************************/
+
+	/**
+	 * Loads the textdomain file for this plugin
+	 *
+	 * @since 1.1.0
+	 *
+	 * @uses apply_filters() Calls 'plugin_locale' with {@link get_locale()} value
+	 * @uses load_textdomain() To load the textdomain
+	 * @uses load_plugin_textdomain() To load the plugin textdomain
+	 */
+	public function load_textdomain() {
+
+		// Traditional WordPress plugin locale filter
+		$locale        = apply_filters( 'plugin_locale', get_locale(), 'gravityforms-submit-once' );
+		$mofile        = sprintf( '%1$s-%2$s.mo', $this->domain, $locale );
+
+		// Setup paths to current locale file
+		$mofile_local  = $this->lang_dir . $mofile;
+		$mofile_global = WP_LANG_DIR . '/gravityforms-submit-once/' . $mofile;
+
+		// Look in global /wp-content/languages/gravityforms-submit-once folder first
+		load_textdomain( $this->domain, $mofile_global );
+
+		// Look in global /wp-content/languages/plugins/ and local plugin languages folder
+		load_plugin_textdomain( $this->domain, false, 'gravityforms-submit-once/languages' );
 	}
 
 	/** Public methods **************************************************/
