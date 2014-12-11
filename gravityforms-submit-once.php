@@ -54,6 +54,7 @@ final class GravityForms_Submit_Once {
 
 		if ( null === $instance ) {
 			$instance = new GravityForms_Submit_Once;
+			$instance->setup_globals();
 			$instance->setup_actions();
 		}
 
@@ -66,6 +67,17 @@ final class GravityForms_Submit_Once {
 	private function __construct() { /* Nothing to do */ }
 
 	/** Private methods *************************************************/
+
+	/**
+	 * Setup default class globals
+	 *
+	 * @since 1.1.0
+	 */
+	private function setup_globals() {
+
+		// Translation domain
+		$this->domain = 'gravityforms-submit-once';
+	}
 
 	/**
 	 * Setup default actions and filters
@@ -102,7 +114,7 @@ final class GravityForms_Submit_Once {
 	public function load_textdomain() {
 
 		// Traditional WordPress plugin locale filter
-		$locale        = apply_filters( 'plugin_locale', get_locale(), 'gravityforms-submit-once' );
+		$locale        = apply_filters( 'plugin_locale', get_locale(), $this->domain );
 		$mofile        = sprintf( '%1$s-%2$s.mo', $this->domain, $locale );
 
 		// Setup paths to current locale file
