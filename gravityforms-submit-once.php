@@ -75,8 +75,23 @@ final class GravityForms_Submit_Once {
 	 */
 	private function setup_globals() {
 
-		// Translation domain
-		$this->domain = 'gravityforms-submit-once';
+		/** Versions **********************************************************/
+
+		$this->version    = '1.0.0';
+
+		/** Paths *************************************************************/
+
+		$this->file       = __FILE__;
+		$this->basename   = plugin_basename( $this->file );
+		$this->plugin_dir = plugin_dir_path( $this->file );
+		$this->plugin_url = plugin_dir_url(  $this->file );
+
+		// Languages
+		$this->lang_dir   = trailingslashit( $this->plugin_dir . 'languages' );
+
+		/** Misc **************************************************************/
+
+		$this->domain     = 'gravityforms-submit-once';
 	}
 
 	/**
