@@ -15,6 +15,10 @@ This plugin introduces a form setting in Gravity Forms to mark a form to accept 
 
 == Changelog ==
 
+= 1.2.0 =
+* Added setting for a message to show when form is already submitted
+* Added Dutch translation
+
 = 1.1.0 =
 * Added form settings tooltips
 
