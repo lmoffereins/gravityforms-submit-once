@@ -3,7 +3,7 @@ Contributors: Offereins
 Tags: Gravity Forms, form, submit, submission, once, single, reply, entry
 Requires at least: 4.0, GF 1.8.7
 Tested up to: 4.1
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ This plugin introduces a form setting in Gravity Forms to mark a form to accept 
 == Changelog ==
 
 = 1.2.0 =
-* Added setting for a message to show when form is already submitted
+* Added setting for a message to show when the form is already submitted
 * Added Dutch translation
 
 = 1.1.0 =
