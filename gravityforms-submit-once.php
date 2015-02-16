@@ -39,6 +39,14 @@ final class GravityForms_Submit_Once {
 	private $meta_key = 'submitOnce';
 
 	/**
+	 * The plugin setting's message meta key
+	 *
+	 * @since 1.2.0
+	 * @var string
+	 */
+	private $message_meta_key = 'submitOnceMessage';
+
+	/**
 	 * Setup and return the singleton pattern
 	 *
 	 * @since 1.0.0
@@ -180,7 +188,7 @@ final class GravityForms_Submit_Once {
 
 			// User has already submitted this form. Display only-submit-once message
 			} elseif ( (bool) $this->get_user_form_entries( $form['id'], $user_id ) ) {
-				$content = '<p>' . __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) . '</p>';
+				$content = '<p>' . ( empty( $form[ $this->message_meta_key ] ) ? __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) : GFCommon::gform_do_shortcode( $form[ $this->message_meta_key ] ) ) . '</p>';
 			}
 		}
 
@@ -275,15 +283,36 @@ final class GravityForms_Submit_Once {
 	 */
 	public function register_form_setting( $settings, $form ) {
 
+		// Define local variable(s)
+		$enabled = $this->get_form_meta( $form, $this->meta_key );
+		$style   = ! $enabled ? 'style="display:none;"' : '';
+
 		// Start output buffer and setup our setting's field
 		ob_start(); ?>
 
 		<tr>
 			<th><?php _e( 'Submit once', 'gravityforms-submit-once' ); ?> <?php gform_tooltip( 'submit_once' ); ?></th>
 			<td>
-				<input type="checkbox" name="submit-once" id="gform_submit_once" value="1" <?php checked( $this->get_form_meta( $form, $this->meta_key ) ); ?>>
+				<input type="checkbox" name="submit-once" id="gform_submit_once" value="1" <?php checked( $enabled ); ?> onclick="window[ ( this.checked ? 'Show' : 'Hide' ) + 'SettingRow' ]( '#submit_once_details' );" />
 				<label for="gform_submit_once"><?php _e( 'Accept only one entry per user', 'gravityforms-submit-once' ); ?></label>
 			</td>
+		</tr>
+
+		<tr id="submit_once_details" class="child_setting_row" <?php echo $style; ?>>
+			<td colspan="2" class="gf_sub_settings_cell">
+				<div class="gf_animate_sub_settings">
+					<table>
+
+						<tr>
+							<th><?php _e( 'Once Submitted Message', 'gravityforms-submit-once' ); ?></th>
+							<td>
+								<textarea name="submit-once-message" class="fieldwidth-3"><?php echo esc_textarea( $this->get_form_meta( $form, $this->message_meta_key ) ); ?></textarea>
+							</td>
+						</tr>
+
+					</table>
+				</div><!-- .gf_animate_sub_settings -->
+			</td><!-- .gf_sub_settings_cell -->
 		</tr>
 
 		<?php
@@ -300,7 +329,7 @@ final class GravityForms_Submit_Once {
 		/**
 		 * Insert our field at the given position
 		 * 
-		 * @link http://stackoverflow.com/questions/3353745/how-to-insert-element-into-array-to-specific-position/3354804#3354804
+		 * @link http://stackoverflow.com/a/3354804/3601434
 		 */
 		$settings[ $section ] = array_slice( $settings[ $section ], 0, $position, true ) +
 			array( $this->meta_key => $field ) +
@@ -319,8 +348,20 @@ final class GravityForms_Submit_Once {
 	 */
 	public function update_form_setting( $settings ) {
 
-		// Sanitize form from $_POST var
+		// Sanitize submit-once
 		$settings[ $this->meta_key ] = isset( $_POST['submit-once'] ) ? (int) $_POST['submit-once'] : 0;
+
+		// Sanitize message
+		$settings[ $this->message_meta_key ] = isset( $_POST['submit-once-message'] ) ? wp_kses( $_POST['submit-once-message'], array(
+			'a' => array(
+				'href' => array(),
+				'title' => array()
+			),
+			'p' => array(),
+			'br' => array(),
+			'em' => array(),
+			'strong' => array(),
+		) ) : '';
 
 		return $settings;
 	}
