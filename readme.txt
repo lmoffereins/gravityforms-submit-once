@@ -15,6 +15,9 @@ This plugin introduces a form setting in Gravity Forms to mark a form to accept 
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed submitting multiple entries when using multiple browser login sessions
+
 = 1.2.0 =
 * Added setting for a message to show when the form is already submitted
 * Added Dutch translation
