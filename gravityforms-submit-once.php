@@ -115,6 +115,9 @@ final class GravityForms_Submit_Once {
 		// Displaying the form
 		add_filter( 'gform_get_form_filter', array( $this, 'handle_form_display' ), 50, 2 );
 
+		// Submitting an entry
+		add_filter( 'gform_validation', array( $this, 'handle_form_validation'   ), 50 );
+
 		// Form settings
 		add_filter( 'gform_form_settings',          array( $this, 'register_form_setting' ), 10, 2 );
 		add_filter( 'gform_pre_form_settings_save', array( $this, 'update_form_setting'   )        );
@@ -154,48 +157,6 @@ final class GravityForms_Submit_Once {
 	/** Public methods **************************************************/
 
 	/**
-	 * Do not display the form when the current user already submitted once
-	 *
-	 * @since 1.0.0
-	 *
-	 * @uses get_current_user_id()
-	 * @uses GravityForms_Submit_Once::get_form_meta()
-	 * @uses GravityForms_Submit_Once::translate()
-	 * @uses GFCommon::gform_do_shortcode()
-	 * @uses GravityForms_Submit_Once::get_user_form_entries()
-	 * 
-	 * @param string $content The form response HTML
-	 * @param array $form Form meta data
-	 * @return string Form HTML
-	 */
-	public function handle_form_display( $content, $form ) {
-
-		// Bail when form or content is empty
-		if ( empty( $content ) || empty( $form ) )
-			return $content;
-
-		// Get the current user
-		$user_id = get_current_user_id();
-
-		// Form is marked to allow submissions once
-		if ( (bool) $this->get_form_meta( $form, $this->meta_key ) ) {
-
-			// User is not logged in. Hide the form when login is not explicitly required
-			if ( empty( $user_id ) && empty( $form['requireLogin'] ) ) {
-
-				// Display not-loggedin message
-				$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->translate( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
-
-			// User has already submitted this form. Display only-submit-once message
-			} elseif ( (bool) $this->get_user_form_entries( $form['id'], $user_id ) ) {
-				$content = '<p>' . ( empty( $form[ $this->message_meta_key ] ) ? __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) : GFCommon::gform_do_shortcode( $form[ $this->message_meta_key ] ) ) . '</p>';
-			}
-		}
-
-		return $content;
-	}
-
-	/**
 	 * Return the given form's meta value
 	 *
 	 * @since 1.0.0
@@ -220,6 +181,36 @@ final class GravityForms_Submit_Once {
 	}
 
 	/**
+	 * Return whether the given form is marked submit-once
+	 *
+	 * @since 1.3.0
+	 *
+	 * @uses GravityForms_Submit_Once::get_form_meta()
+	 * 
+	 * @param int|array $form_id Form ID or form data
+	 * @return bool Form is submit-once
+	 */
+	public function is_submit_once_form( $form_id ) {
+		return $this->get_form_meta( $form_id, $this->meta_key );
+	}
+
+	/**
+	 * Return whether the given user has submitted the given form once
+	 *
+	 * @since 1.3.0
+	 *
+	 * @uses GravityForms_Submit_Once::get_user_form_entries()
+	 * 
+	 * @param int|array $form_id Form ID or form data
+	 * @param int $user_id User ID
+	 * @return bool User has submitted once
+	 */
+	public function has_user_submitted_once( $form_id, $user_id = 0 ) {
+		$entries = $this->get_user_form_entries( $form_id, $user_id );
+		return ! empty( $entries );
+	}
+
+	/**
 	 * Return the given form's entries ids for the given user
 	 *
 	 * @since 1.0.0
@@ -231,7 +222,7 @@ final class GravityForms_Submit_Once {
 	 * @uses wpdb::get_col()
 	 * @uses wpdb::prepare()
 	 * 
-	 * @param int $form_id Form ID
+	 * @param int|array $form_id Form ID or form data
 	 * @param int $user_id Optional. User ID. Defaults to current user ID
 	 * @return array The user's form entries ids
 	 */
@@ -241,13 +232,21 @@ final class GravityForms_Submit_Once {
 		// Default to current user
 		if ( empty( $user_id ) ) {
 			$user_id = get_current_user_id();
+
+			// Bail when user is unidentified
 			if ( empty( $user_id ) ) {
 				return array();
 			}
 		}
 
-		// Since GF hasn't any such query function, we'll have to write
-		// our own SQL query to get the user's form entries.
+		// Get form ID from non-numeric input
+		if ( ! is_numeric( $form_id ) ) {
+			$form = (array) $form_id;
+			$form_id = $form['id'];
+		}
+
+		// Since GF does not have any such a query function, we
+		// use our own query to get the user's form entries.
 		$table_name = GFFormsModel::get_lead_table_name();
 		$entries = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $table_name WHERE form_id = %d AND created_by = %d AND status = %s", $form_id, $user_id, 'active' ) );
 
@@ -255,7 +254,7 @@ final class GravityForms_Submit_Once {
 	}
 
 	/**
-	 * Return a translated string with the 'gravityforms' context
+	 * Return a translated string with the given context
 	 *
 	 * @since 1.0.0
 	 *
@@ -266,6 +265,73 @@ final class GravityForms_Submit_Once {
 	 */
 	public function translate( $string, $context = 'gravityforms' ) {
 		return call_user_func_array( '__', array( $string, $context ) );
+	}
+
+	/** Public Filters **************************************************/
+
+	/**
+	 * Do not display the form when the current user already submitted once
+	 *
+	 * @since 1.0.0
+	 *
+	 * @uses get_current_user_id()
+	 * @uses GravityForms_Submit_Once::get_form_meta()
+	 * @uses GravityForms_Submit_Once::translate()
+	 * @uses GFCommon::gform_do_shortcode()
+	 * @uses GravityForms_Submit_Once::get_user_form_entries()
+	 * 
+	 * @param string $content The form response HTML
+	 * @param array $form Form meta data
+	 * @return string Form HTML
+	 */
+	public function handle_form_display( $content, $form ) {
+
+		// Bail when form or content is empty
+		if ( empty( $content ) || empty( $form ) )
+			return $content;
+
+		// Get the current user
+		$user_id = get_current_user_id();
+
+		// Form is marked to allow submissions once
+		if ( $this->is_submit_once_form( $form ) ) {
+
+			// User is not logged in. Hide the form when login is not explicitly required
+			if ( empty( $user_id ) && empty( $form['requireLogin'] ) ) {
+
+				// Display not-loggedin message
+				$content = '<p>' . ( empty( $form['requireLoginMessage'] ) ? $this->translate( 'Sorry. You must be logged in to view this form.' ) : GFCommon::gform_do_shortcode( $form['requireLoginMessage'] ) ) . '</p>';
+
+			// User has already submitted this form. Display only-submit-once message
+			} elseif ( $this->has_user_submitted_once( $form, $user_id ) ) {
+				$content = '<p>' . ( empty( $form[ $this->message_meta_key ] ) ? __( 'Sorry. You can only submit this form once.', 'gravityforms-submit-once' ) : GFCommon::gform_do_shortcode( $form[ $this->message_meta_key ] ) ) . '</p>';
+			}
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Do not validate the form when it was submitted once by the current user
+	 *
+	 * @since 1.3.0
+	 *
+	 * @uses GravityForms_Submit_Once::is_submit_once_form()
+	 * @uses GravityForms_Submit_Once::has_user_submitted_once()
+	 * 
+	 * @param array $validation Validation data
+	 * @return array Validation data
+	 */
+	public function handle_form_validation( $validation ) {
+
+		// When submit-once is enabled and the form is valid
+		if ( isset( $validation['is_valid'] ) && $validation['is_valid'] && $this->is_submit_once_form( $validation['form'] ) ) {
+
+			// Form is invalid when it was already submitted
+			$validation['is_valid'] = ! $this->has_user_submitted_once( $validation['form'] );
+		}
+
+		return $validation;
 	}
 
 	/** Admin Settings **************************************************/
