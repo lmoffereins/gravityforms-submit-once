@@ -11,7 +11,7 @@
  * Plugin Name:       Gravity Forms Submit Once
  * Description:       Limit forms in Gravity Forms to accept only one entry per user.
  * Plugin URI:        https://github.com/lmoffereins/gravityforms-submit-once/
- * Version:           1.2.0
+ * Version:           1.2.1
  * Author:            Laurens Offereins
  * Author URI:        https://github.com/lmoffereins/
  * Text Domain:       gravityforms-submit-once
@@ -85,7 +85,7 @@ final class GravityForms_Submit_Once {
 
 		/** Versions **********************************************************/
 
-		$this->version    = '1.2.0';
+		$this->version    = '1.2.1';
 
 		/** Paths *************************************************************/
 
