@@ -183,7 +183,7 @@ final class GravityForms_Submit_Once {
 	/**
 	 * Return whether the given form is marked submit-once
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.1
 	 *
 	 * @uses GravityForms_Submit_Once::get_form_meta()
 	 * 
@@ -197,7 +197,7 @@ final class GravityForms_Submit_Once {
 	/**
 	 * Return whether the given user has submitted the given form once
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.1
 	 *
 	 * @uses GravityForms_Submit_Once::get_user_form_entries()
 	 * 
@@ -314,7 +314,7 @@ final class GravityForms_Submit_Once {
 	/**
 	 * Do not validate the form when it was submitted once by the current user
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.1
 	 *
 	 * @uses GravityForms_Submit_Once::is_submit_once_form()
 	 * @uses GravityForms_Submit_Once::has_user_submitted_once()
