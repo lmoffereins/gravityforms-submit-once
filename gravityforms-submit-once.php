@@ -119,8 +119,11 @@ final class GravityForms_Submit_Once {
 		add_filter( 'gform_validation', array( $this, 'handle_form_validation'   ), 50 );
 
 		// Form settings
-		add_filter( 'gform_form_settings',          array( $this, 'register_form_setting' ), 10, 2 );
-		add_filter( 'gform_pre_form_settings_save', array( $this, 'update_form_setting'   )        );
+		add_filter( 'gform_form_settings_fields',       array( $this, 'register_form_settings_fields' ), 10, 2 );
+		if ( version_compare( GFCommon::$version, '2.5', '<' ) ) {
+			add_filter( 'gform_form_settings',          array( $this, 'register_form_legacy_setting'  ), 10, 2 );
+			add_filter( 'gform_pre_form_settings_save', array( $this, 'update_form_legacy_setting'    )        );
+		}
 
 		// Tooltips
 		add_filter( 'gform_tooltips', array( $this, 'tooltips' ) );
@@ -337,7 +340,69 @@ final class GravityForms_Submit_Once {
 	/** Admin Settings **************************************************/
 
 	/**
-	 * Display the plugin form setting's field
+	 * Register the plugin form setting's field
+	 *
+	 * This filter is used since GF 2.5.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @param array $settings Form settings sections and their fields
+	 * @param int $form Form object
+	 */
+	public function register_form_settings_fields( $settings, $form ) {
+
+		// Settings sections are stored by their key
+		$section = 'restrictions';
+		if ( ! isset( $settings[ $section ] ) ) {
+			$settings[ $section ] = array( 'title' => esc_html( $this->translate( 'Restrictions' ) ), 'fields' => array() );
+		}
+
+		// Define field key to use later on
+		$position = false;
+		foreach ( $settings[ $section ]['fields'] as $index => $field ) {
+			if ( isset( $field['name'] ) && 'limitEntries' === $field['name'] ) {
+				$position = $index;
+			}
+		}
+
+		// Setup settings field if it does not exist
+		if ( false === $position ) {
+			$settings[ $section ]['fields'][] = array(
+				'name'    => 'limitEntries',
+				'type'    => 'checkbox',
+				'label'   => __( 'Limit number of entries', 'gravityforms' ),
+				'choices' => array(),
+				'fields'  => array()
+			);
+		}
+
+		// Insert the fields at the given position
+		$settings[ $section ]['fields'][ $position ]['choices'][] = array(
+			'name'    => $this->meta_key,
+			'label'   => esc_html__( 'Accept only one entry per user', 'gravityforms-submit-once' ),
+			'tooltip' => gform_tooltip( 'submit_once', '', true ),
+		);
+		$settings[ $section ]['fields'][ $position ]['fields'][] = array(
+			'name'       => $this->message_meta_key,
+			'type'       => 'textarea',
+			'label'      => esc_html__( 'Once Submitted Message', 'gravityforms-submit-once' ),
+			'allow_html' => true,
+			'dependency' => array(
+				'live'   => true,
+				'fields' => array(
+					array(
+						'field'  => 'limitEntries',
+						'values' => array( $this->meta_key ),
+					),
+				),
+			),
+		);
+
+		return $settings;
+	}
+
+	/**
+	 * Display the plugin form legacy setting's field
 	 *
 	 * @since 1.0.0
 	 *
@@ -347,7 +412,7 @@ final class GravityForms_Submit_Once {
 	 * @param array $settings Form settings sections and their fields
 	 * @param int $form Form object
 	 */
-	public function register_form_setting( $settings, $form ) {
+	public function register_form_legacy_setting( $settings, $form ) {
 
 		// Define local variable(s)
 		$enabled = $this->get_form_meta( $form, $this->meta_key );
@@ -415,22 +480,32 @@ final class GravityForms_Submit_Once {
 	 * @param array $settings Form settings
 	 * @return array Form settings
 	 */
-	public function update_form_setting( $settings ) {
+	public function update_form_legacy_setting( $settings ) {
+		$submit_once = 0;
+		$message = '';
 
 		// Sanitize submit-once
-		$settings[ $this->meta_key ] = isset( $_POST['submit-once'] ) ? (int) $_POST['submit-once'] : 0;
+		if ( isset( $_POST['submit-once'] ) ) {
+			$submit_once =  (int) $_POST['submit-once'];
+		}
 
 		// Sanitize message
-		$settings[ $this->message_meta_key ] = isset( $_POST['submit-once-message'] ) ? wp_kses( $_POST['submit-once-message'], array(
-			'a' => array(
-				'href' => array(),
-				'title' => array()
-			),
-			'p' => array(),
-			'br' => array(),
-			'em' => array(),
-			'strong' => array(),
-		) ) : '';
+		if ( isset( $_POST['submit-once-message'] ) ) {
+			$message = wp_kses( $_POST['submit-once-message'], array(
+				'a' => array(
+					'href' => array(),
+					'title' => array()
+				),
+				'p' => array(),
+				'br' => array(),
+				'em' => array(),
+				'strong' => array(),
+			) );
+		}
+
+		// Store values
+		$settings[ $this->meta_key ] = $submit_once;
+		$settings[ $this->message_meta_key ] = $message;
 
 		return $settings;
 	}
