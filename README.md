@@ -4,7 +4,7 @@ Limit forms in Gravity Forms to accept only one entry per user
 
 ## Description ##
 
-> This WordPress plugin requires at least [WordPress](https://wordpress.org) 4.0 and [Gravity Forms](https://gravityforms.com) 2.5.
+> This WordPress plugin requires at least [WordPress](https://wordpress.org) 4.0 and [Gravity Forms](https://gravityforms.com) 1.8.7.
 
 This plugin introduces a form setting in Gravity Forms to mark a form to accept only one entry per user.
 
