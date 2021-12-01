@@ -250,8 +250,8 @@ final class GravityForms_Submit_Once {
 
 		// Since GF does not have any such a query function, we
 		// use our own query to get the user's form entries.
-		$table_name = GFFormsModel::get_lead_table_name();
-		$entries = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $table_name WHERE form_id = %d AND created_by = %d AND status = %s", $form_id, $user_id, 'active' ) );
+		$entry_table_name = version_compare( GFFormsModel::get_database_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_table_name() : GFFormsModel::get_entry_table_name();
+		$entries = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM $entry_table_name WHERE form_id = %d AND created_by = %d AND status = %s", $form_id, $user_id, 'active' ) );
 
 		return apply_filters( 'gf_submit_once_get_user_form_entries', $entries, $form_id, $user_id );
 	}
