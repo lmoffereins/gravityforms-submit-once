@@ -388,6 +388,9 @@ final class GravityForms_Submit_Once {
 
 		// Settings sections are stored by their translatable title
 		$section = $this->translate( 'Restrictions' );
+		if ( ! isset( $settings[ $section ] ) ) {
+			$settings[ $section ] = array();
+		}
 
 		// Define field key to insert ours after
 		$position = array_search( 'entry_limit_message', array_keys( $settings[ $section ] ) ) + 1;
