@@ -51,8 +51,6 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @uses GravityForms_Submit_Once::setup_globals()
-	 * @uses GravityForms_Submit_Once::setup_actions()
 	 * @return The single GravityForms_Submit_Once
 	 */
 	public static function instance() {
@@ -135,10 +133,6 @@ final class GravityForms_Submit_Once {
 	 * Loads the textdomain file for this plugin
 	 *
 	 * @since 1.1.0
-	 *
-	 * @uses apply_filters() Calls 'plugin_locale' with {@link get_locale()} value
-	 * @uses load_textdomain() To load the textdomain
-	 * @uses load_plugin_textdomain() To load the plugin textdomain
 	 */
 	public function load_textdomain() {
 
@@ -163,8 +157,6 @@ final class GravityForms_Submit_Once {
 	 * Return the given form's meta value
 	 *
 	 * @since 1.0.0
-	 *
-	 * @uses GFFormsModel::get_form_meta()
 	 * 
 	 * @param array|int $form Form object or form ID
 	 * @param string $meta_key Form meta key
@@ -187,8 +179,6 @@ final class GravityForms_Submit_Once {
 	 * Return whether the given form is marked submit-once
 	 *
 	 * @since 1.2.1
-	 *
-	 * @uses GravityForms_Submit_Once::get_form_meta()
 	 * 
 	 * @param int|array $form_id Form ID or form data
 	 * @return bool Form is submit-once
@@ -201,8 +191,6 @@ final class GravityForms_Submit_Once {
 	 * Return whether the given user has submitted the given form once
 	 *
 	 * @since 1.2.1
-	 *
-	 * @uses GravityForms_Submit_Once::get_user_form_entries()
 	 * 
 	 * @param int|array $form_id Form ID or form data
 	 * @param int $user_id User ID
@@ -218,12 +206,7 @@ final class GravityForms_Submit_Once {
 	 *
 	 * @since 1.0.0
 	 * 
-	 * @global wpdb
-	 *
-	 * @uses get_current_user_id()
-	 * @uses GFFormsModel::get_lead_table_name()
-	 * @uses wpdb::get_col()
-	 * @uses wpdb::prepare()
+	 * @global $wpdb WPDB
 	 * 
 	 * @param int|array $form_id Form ID or form data
 	 * @param int $user_id Optional. User ID. Defaults to current user ID
@@ -276,12 +259,6 @@ final class GravityForms_Submit_Once {
 	 * Do not display the form when the current user already submitted once
 	 *
 	 * @since 1.0.0
-	 *
-	 * @uses get_current_user_id()
-	 * @uses GravityForms_Submit_Once::get_form_meta()
-	 * @uses GravityForms_Submit_Once::translate()
-	 * @uses GFCommon::gform_do_shortcode()
-	 * @uses GravityForms_Submit_Once::get_user_form_entries()
 	 * 
 	 * @param string $content The form response HTML
 	 * @param array $form Form meta data
@@ -318,9 +295,6 @@ final class GravityForms_Submit_Once {
 	 * Do not validate the form when it was submitted once by the current user
 	 *
 	 * @since 1.2.1
-	 *
-	 * @uses GravityForms_Submit_Once::is_submit_once_form()
-	 * @uses GravityForms_Submit_Once::has_user_submitted_once()
 	 * 
 	 * @param array $validation Validation data
 	 * @return array Validation data
@@ -405,9 +379,6 @@ final class GravityForms_Submit_Once {
 	 * Display the plugin form legacy setting's field
 	 *
 	 * @since 1.0.0
-	 *
-	 * @uses GravityForms_Submit_Once::get_form_meta()
-	 * @uses GravityForms_Submit_Once::translate()
 	 * 
 	 * @param array $settings Form settings sections and their fields
 	 * @param int $form Form object
