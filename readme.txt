@@ -15,6 +15,9 @@ This plugin introduces a form setting in Gravity Forms to mark a form to accept 
 
 == Changelog ==
 
+= 1.2.2 =
+* Updated compatibility with GF 2.5
+
 = 1.2.1 =
 * Fixed submitting multiple entries when using multiple browser login sessions
 
